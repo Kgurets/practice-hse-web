@@ -1,0 +1,100 @@
+{
+  "users": {
+    "3": {
+      "id": 3,
+      "email": "tvoi_email@example.com",
+      "login": "катюшка",
+      "password": "123456",
+      "created_at": "2025-09-30T15:48:20.673996",
+      "updated_at": "2025-09-30T15:48:20.674016"
+    },
+    "4": {
+      "id": 4,
+      "email": "tvoi_email@example.com",
+      "login": "катюшка",
+      "password": "123456",
+      "created_at": "2025-09-30T15:52:14.745658",
+      "updated_at": "2025-09-30T15:52:14.745685"
+    },
+    "5": {
+      "id": 5,
+      "email": "tvoi_email@example.com",
+      "login": "катюшка",
+      "password": "123456",
+      "created_at": "2025-09-30T15:52:16.415056",
+      "updated_at": "2025-09-30T15:52:16.415069"
+    },
+    "6": {
+      "id": 6,
+      "email": "example@eka.ru",
+      "login": "katya",
+      "password": "123456",
+      "created_at": "2025-10-02T09:18:01.795821",
+      "updated_at": "2025-10-02T09:18:01.795835"
+    },
+    "7": {
+      "id": 7,
+      "email": "ekat@ekat.ru",
+      "login": "ekat",
+      "password": "123456",
+      "created_at": "2025-10-02T09:18:15.724898",
+      "updated_at": "2025-10-02T09:18:15.724910"
+    },
+    "8": {
+      "id": 8,
+      "email": "ivan@example.com",
+      "login": "ivan",
+      "password": "password123",
+      "created_at": "2025-10-02T09:26:38.960553",
+      "updated_at": "2025-10-02T09:26:38.960594"
+    },
+    "9": {
+      "id": 9,
+      "email": "ivan@example.com",
+      "login": "ivan",
+      "password": "password123",
+      "created_at": "2025-10-02T09:28:50.321859",
+      "updated_at": "2025-10-02T09:28:50.321868"
+    }
+  },
+  "posts": {
+    "2": {
+      "id": 2,
+      "author_id": 2,
+      "title": "ухты",
+      "content": "всем привет, это мой первый пост в пикми системе для ведения блогов, всем пока",
+      "created_at": "2025-09-30T15:43:28.449804",
+      "updated_at": "2025-09-30T15:43:28.449815",
+      "author_name": "Unknown"
+    },
+    "3": {
+      "id": 3,
+      "author_id": 4,
+      "title": "теперь от своего имени",
+      "content": "я хз что писать, не блогер, но выглядит эт все круто, Шади привет))",
+      "created_at": "2025-09-30T15:57:06.406898",
+      "updated_at": "2025-09-30T15:57:06.406922",
+      "author_name": "Unknown"
+    },
+    "5": {
+      "id": 5,
+      "author_id": 6,
+      "title": "lol",
+      "content": "iflb, gjcnfdm vyt 5 gj ,hfncrb",
+      "created_at": "2025-10-02T09:19:04.619959",
+      "updated_at": "2025-10-02T09:19:04.619971",
+      "author_name": "katya"
+    },
+    "6": {
+      "id": 6,
+      "author_id": 7,
+      "title": "esdfa",
+      "content": "dfzvz",
+      "created_at": "2025-10-02T09:19:33.571801",
+      "updated_at": "2025-10-02T09:19:33.571815",
+      "author_name": "ekat"
+    }
+  },
+  "next_user_id": 10,
+  "next_post_id": 7
+}

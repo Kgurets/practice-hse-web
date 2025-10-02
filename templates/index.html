@@ -1,0 +1,110 @@
+<!DOCTYPE html>
+<html>
+<head>
+    <title>Главная - Все посты</title>
+    <style>
+        body { font-family: Arial, sans-serif; max-width: 800px; margin: 0 auto; padding: 20px; }
+        .post { border: 1px solid #ddd; padding: 15px; margin: 10px 0; border-radius: 5px; }
+        .post h3 { margin-top: 0; }
+        .meta { color: #666; font-size: 0.9em; }
+        .actions { margin-top: 10px; }
+        .btn { padding: 8px 16px; text-decoration: none; border-radius: 5px; margin-right: 8px; border: none; cursor: pointer; font-size: 14px; display: inline-block; }
+        .btn-primary { background: #ff69b4; color: white; }
+        .btn-success { background: #ff1493; color: white; }
+        .btn-secondary { background: #ffb6c1; color: #333; }
+        .btn-danger { background: #dc3545; color: white; }
+        .user-form { margin: 20px 0; padding: 15px; background: #f9f9f9; border-radius: 5px; }
+        .user-form input { padding: 8px; margin-right: 10px; border: 1px solid #ddd; border-radius: 4px; }
+    </style>
+</head>
+<body>
+    <h1>Все посты</h1>
+    
+    <a href="/posts/create" class="btn btn-success">Создать новый пост</a>
+    
+    <div class="user-form">
+        <h3>Создать нового пользователя:</h3>
+        <div style="margin-bottom: 10px;">
+            <input type="text" id="userLogin" placeholder="Имя пользователя" style="width: 200px;">
+            <input type="email" id="userEmail" placeholder="Email" style="width: 200px;">
+        </div>
+        <button onclick="createCustomUser()" class="btn btn-secondary">Создать пользователя</button>
+    </div>
+
+    <div id="posts">
+        {% for post in posts %}
+        <div class="post">
+            <h3>{{ post.title }}</h3>
+            <div class="meta">
+                Автор: {{ post.author_name }} | 
+                Создан: {{ post.created_at[:16] }}
+            </div>
+            <p>{{ post.content[:200] }}{% if post.content|length > 200 %}...{% endif %}</p>
+            <div class="actions">
+                <a href="/posts/{{ post.id }}" class="btn btn-primary">Читать</a>
+                <a href="/posts/edit/{{ post.id }}" class="btn btn-secondary">Редактировать</a>
+                <button onclick="deletePost('{{ post.id }}')" class="btn btn-danger">Удалить</button>
+            </div>
+        </div>
+        {% else %}
+        <p>Пока нет постов. <a href="/posts/create">Создайте первый пост!</a></p>
+        {% endfor %}
+    </div>
+
+    <script>
+        async function createCustomUser() {
+            const login = document.getElementById('userLogin').value;
+            const email = document.getElementById('userEmail').value;
+            
+            if (!login || !email) {
+                alert('Введите имя и email!');
+                return;
+            }
+
+            try {
+                const response = await fetch('/api/users/', {
+                    method: 'POST',
+                    headers: { 'Content-Type': 'application/json' },
+                    body: JSON.stringify({
+                        email: email,
+                        login: login,
+                        password: '123456'
+                    })
+                });
+                
+                if (response.ok) {
+                    alert('Пользователь ' + login + ' создан!');
+                    document.getElementById('userLogin').value = '';
+                    document.getElementById('userEmail').value = '';
+                    location.reload();
+                } else {
+                    alert('Ошибка при создании пользователя');
+                }
+            } catch (error) {
+                alert('Ошибка: ' + error.message);
+            }
+        }
+
+        async function deletePost(postId) {
+            if (!confirm('Вы уверены, что хотите удалить этот пост?')) {
+                return;
+            }
+
+            try {
+                const response = await fetch('/api/posts/' + postId, {
+                    method: 'DELETE'
+                });
+                
+                if (response.ok) {
+                    alert('Пост удален!');
+                    location.reload();
+                } else {
+                    alert('Ошибка при удалении поста');
+                }
+            } catch (error) {
+                alert('Ошибка: ' + error.message);
+            }
+        }
+    </script>
+</body>
+</html>

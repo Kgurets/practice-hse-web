@@ -1,0 +1,32 @@
+<!DOCTYPE html>
+<html>
+<head>
+    <title>{{ post.title }}</title>
+    <style>
+        body { font-family: Arial, sans-serif; max-width: 800px; margin: 0 auto; padding: 20px; }
+        .post-content { line-height: 1.6; margin: 20px 0; }
+        .meta { color: #666; font-size: 0.9em; margin-bottom: 20px; }
+        .btn { padding: 8px 16px; text-decoration: none; border-radius: 5px; }
+        .btn-primary { background: #ff69b4; color: white; }
+        .btn-secondary { background: #ffb6c1; color: #333; }
+    </style>
+</head>
+<body>
+    <a href="/" class="btn btn-primary">Назад к списку</a>
+    
+    <h1>{{ post.title }}</h1>
+    <div class="meta">
+        Автор: {{ author_name }} | 
+        Создан: {{ post.created_at[:16] }} |
+        Обновлен: {{ post.updated_at[:16] }}
+    </div>
+    
+    <div class="post-content">
+        {{ post.content }}
+    </div>
+    
+    <div>
+        <a href="/posts/edit/{{ post.id }}" class="btn btn-secondary">Редактировать</a>
+    </div>
+</body>
+</html>
