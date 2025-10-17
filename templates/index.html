@@ -10,11 +10,17 @@
         .actions { margin-top: 10px; }
         .btn { padding: 8px 16px; text-decoration: none; border-radius: 5px; margin-right: 8px; border: none; cursor: pointer; font-size: 14px; display: inline-block; }
         .btn-primary { background: #ff69b4; color: white; }
-        .btn-success { background: #ff1493; color: white; }
+        .btn-success { background: #eb61ab; color: white; }
         .btn-secondary { background: #ffb6c1; color: #333; }
-        .btn-danger { background: #dc3545; color: white; }
+        .btn-danger { background: #6e0c16; color: white; }
+        .btn-warning { background: #f89cbe; color: black; }
         .user-form { margin: 20px 0; padding: 15px; background: #f9f9f9; border-radius: 5px; }
         .user-form input { padding: 8px; margin-right: 10px; border: 1px solid #ddd; border-radius: 4px; }
+        .user-list { margin-top: 15px; }
+        .user-item { display: flex; justify-content: space-between; align-items: center; padding: 5px 0; border-bottom: 1px solid #eee; }
+        .categories-management { margin: 20px 0; padding: 15px; background: #f0f8ff; border-radius: 5px; }
+        .category-item { display: flex; justify-content: space-between; align-items: center; padding: 5px 0; border-bottom: 1px solid #ddd; }
+        .subscriptions { margin: 20px 0; padding: 15px; background: #fff0f5; border-radius: 5px; }
     </style>
 </head>
 <body>
@@ -23,12 +29,49 @@
     <a href="/posts/create" class="btn btn-success">Создать новый пост</a>
     
     <div class="user-form">
-        <h3>Создать нового пользователя:</h3>
+        <h3>Управление пользователями:</h3>
         <div style="margin-bottom: 10px;">
             <input type="text" id="userLogin" placeholder="Имя пользователя" style="width: 200px;">
             <input type="email" id="userEmail" placeholder="Email" style="width: 200px;">
         </div>
         <button onclick="createCustomUser()" class="btn btn-secondary">Создать пользователя</button>
+        
+        <div class="user-list">
+            <h4>Существующие пользователи:</h4>
+            {% for user in users %}
+            <div class="user-item">
+                <span>{{ user.login }} ({{ user.email }})</span>
+                <div>
+                    <button onclick="viewSubscriptions('{{ user.id }}')" class="btn btn-warning" style="padding: 4px 8px; font-size: 12px;">Подписки</button>
+                    <button onclick="viewFavorites('{{ user.id }}')" class="btn btn-success" style="padding: 4px 8px; font-size: 12px;">Избранное</button>
+                    <button onclick="deleteUser('{{ user.id }}')" class="btn btn-danger" style="padding: 4px 8px; font-size: 12px;">Удалить</button>
+                </div>
+            </div>
+            {% else %}
+            <p>Нет пользователей</p>
+            {% endfor %}
+        </div>
+    </div>
+
+    <div class="categories-management">
+        <h3>Управление категориями:</h3>
+        <div style="margin-bottom: 10px;">
+            <input type="text" id="categoryName" placeholder="Название категории" style="width: 200px;">
+            <input type="text" id="categoryDesc" placeholder="Описание" style="width: 250px;">
+        </div>
+        <button onclick="createCategory()" class="btn btn-secondary">Создать категорию</button>
+        
+        <div style="margin-top: 15px;">
+            <h4>Существующие категории:</h4>
+            {% for category in categories %}
+            <div class="category-item">
+                <span><strong>{{ category.name }}</strong> - {{ category.description }}</span>
+                <button onclick="deleteCategory('{{ category.id }}')" class="btn btn-danger" style="padding: 4px 8px; font-size: 12px;">Удалить</button>
+            </div>
+            {% else %}
+            <p>Нет категорий</p>
+            {% endfor %}
+        </div>
     </div>
 
     <div id="posts">
@@ -79,6 +122,114 @@
                     location.reload();
                 } else {
                     alert('Ошибка при создании пользователя');
+                }
+            } catch (error) {
+                alert('Ошибка: ' + error.message);
+            }
+        }
+
+        async function createCategory() {
+            const name = document.getElementById('categoryName').value;
+            const description = document.getElementById('categoryDesc').value;
+            
+            if (!name) {
+                alert('Введите название категории!');
+                return;
+            }
+
+            try {
+                const response = await fetch('/api/categories/', {
+                    method: 'POST',
+                    headers: { 'Content-Type': 'application/json' },
+                    body: JSON.stringify({
+                        name: name,
+                        description: description
+                    })
+                });
+                
+                if (response.ok) {
+                    alert('Категория создана!');
+                    document.getElementById('categoryName').value = '';
+                    document.getElementById('categoryDesc').value = '';
+                    location.reload();
+                } else {
+                    alert('Ошибка при создании категории');
+                }
+            } catch (error) {
+                alert('Ошибка: ' + error.message);
+            }
+        }
+
+        async function deleteCategory(categoryId) {
+            if (!confirm('Удалить категорию?')) return;
+            
+            try {
+                const response = await fetch('/api/categories/' + categoryId, {
+                    method: 'DELETE'
+                });
+                
+                if (response.ok) {
+                    alert('Категория удалена!');
+                    location.reload();
+                }
+            } catch (error) {
+                alert('Ошибка: ' + error.message);
+            }
+        }
+
+        async function viewSubscriptions(userId) {
+            try {
+                const response = await fetch('/api/users/' + userId + '/subscriptions');
+                const subscriptions = await response.json();
+                
+                let message = 'Подписки пользователя:\n';
+                if (subscriptions.length > 0) {
+                    subscriptions.forEach(sub => {
+                        message += `- ID: ${sub.target_user_id}\n`;
+                    });
+                } else {
+                    message += 'Нет подписок';
+                }
+                alert(message);
+            } catch (error) {
+                alert('Ошибка: ' + error.message);
+            }
+        }
+
+        async function viewFavorites(userId) {
+            try {
+                const response = await fetch('/api/users/' + userId + '/favorites');
+                const favorites = await response.json();
+                
+                let message = 'Избранное пользователя:\n';
+                if (favorites.length > 0) {
+                    favorites.forEach(fav => {
+                        message += `- Пост ID: ${fav.post_id}\n`;
+                    });
+                } else {
+                    message += 'Нет избранных постов';
+                }
+                alert(message);
+            } catch (error) {
+                alert('Ошибка: ' + error.message);
+            }
+        }
+
+        async function deleteUser(userId) {
+            if (!confirm('Вы уверены, что хотите удалить этого пользователя?')) {
+                return;
+            }
+
+            try {
+                const response = await fetch('/api/users/' + userId, {
+                    method: 'DELETE'
+                });
+                
+                if (response.ok) {
+                    alert('Пользователь удален!');
+                    location.reload();
+                } else {
+                    alert('Ошибка при удалении пользователя');
                 }
             } catch (error) {
                 alert('Ошибка: ' + error.message);

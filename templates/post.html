@@ -6,9 +6,22 @@
         body { font-family: Arial, sans-serif; max-width: 800px; margin: 0 auto; padding: 20px; }
         .post-content { line-height: 1.6; margin: 20px 0; }
         .meta { color: #666; font-size: 0.9em; margin-bottom: 20px; }
-        .btn { padding: 8px 16px; text-decoration: none; border-radius: 5px; }
+        .btn { padding: 8px 16px; text-decoration: none; border-radius: 5px; margin-right: 8px; border: none; cursor: pointer; font-size: 14px; display: inline-block; }
         .btn-primary { background: #ff69b4; color: white; }
         .btn-secondary { background: #ffb6c1; color: #333; }
+        .btn-success { background: #28a745; color: white; }
+        .btn-warning { background: #ffc107; color: black; }
+        .btn-info { background: #17a2b8; color: white; }
+        .comments { margin-top: 30px; }
+        .comment { border: 1px solid #ddd; padding: 10px; margin: 10px 0; border-radius: 4px; }
+        .comment-meta { color: #666; font-size: 0.8em; }
+        .comment-form { margin-top: 20px; padding: 15px; background: #f9f9f9; border-radius: 4px; }
+        .comment-form textarea { width: 100%; padding: 8px; border: 1px solid #ddd; border-radius: 4px; margin-bottom: 10px; }
+        .categories { margin: 10px 0; }
+        .category-tag { background: #e9ecef; padding: 4px 12px; border-radius: 15px; font-size: 0.8em; margin-right: 8px; display: inline-block; margin-bottom: 5px; }
+        .actions { margin: 15px 0; }
+        .subscription-section { margin: 20px 0; padding: 15px; background: #f0f8ff; border-radius: 4px; }
+        .favorites-section { margin: 20px 0; padding: 15px; background: #fff0f5; border-radius: 4px; }
     </style>
 </head>
 <body>
@@ -20,13 +33,203 @@
         Создан: {{ post.created_at[:16] }} |
         Обновлен: {{ post.updated_at[:16] }}
     </div>
-    
+
+    <div class="categories">
+        <strong>Категории:</strong>
+        <div id="postCategories">
+            {% for category in post.categories %}
+            <span class="category-tag">{{ category.name }}</span>
+            {% else %}
+            <span>Нет категорий</span>
+            {% endfor %}
+        </div>
+    </div>
+
     <div class="post-content">
         {{ post.content }}
     </div>
     
-    <div>
+    <div class="actions">
         <a href="/posts/edit/{{ post.id }}" class="btn btn-secondary">Редактировать</a>
     </div>
+
+    <div class="favorites-section">
+        <h3>💖 Добавить в избранное</h3>
+        <select id="favoriteUser" style="margin-right: 10px; padding: 5px;">
+            <option value="">Выберите пользователя</option>
+            {% for user in users %}
+            <option value="{{ user.id }}">{{ user.login }}</option>
+            {% endfor %}
+        </select>
+        <button onclick="addToFavorites('{{ post.id }}')" class="btn btn-success">Добавить в избранное</button>
+    </div>
+
+    <div class="subscription-section">
+        <h3>🔔 Подписки на автора</h3>
+        <select id="subscriberUser" style="margin-right: 10px; padding: 5px;">
+            <option value="">Выберите подписчика</option>
+            {% for user in users %}
+            <option value="{{ user.id }}">{{ user.login }}</option>
+            {% endfor %}
+        </select>
+        <button onclick="subscribeToAuthor('{{ post.author_id }}')" class="btn btn-warning">Подписаться на автора</button>
+        <button onclick="viewSubscriptions('{{ post.author_id }}')" class="btn btn-info">Показать подписчиков</button>
+    </div>
+
+    <div class="comments">
+        <h3>💬 Комментарии ({{ comments|length }})</h3>
+        
+        <div class="comment-form">
+            <h4>Добавить комментарий:</h4>
+            <select id="commentAuthor" style="margin-bottom: 10px; padding: 5px; display: block;">
+                <option value="">Выберите пользователя</option>
+                {% for user in users %}
+                <option value="{{ user.id }}">{{ user.login }}</option>
+                {% endfor %}
+            </select>
+            <textarea id="commentContent" placeholder="Ваш комментарий..." rows="3"></textarea>
+            <button onclick="addComment('{{ post.id }}')" class="btn btn-primary">Отправить комментарий</button>
+        </div>
+
+        <div id="commentsList">
+            {% for comment in comments %}
+            <div class="comment">
+                <div class="comment-meta">
+                    <strong>{{ comment.author_name }}</strong> | {{ comment.created_at[:16] }}
+                </div>
+                <div style="margin: 8px 0;">{{ comment.content }}</div>
+                <button onclick="deleteComment('{{ comment.id }}')" class="btn" style="padding: 4px 8px; font-size: 12px; background: #dc3545; color: white;">Удалить</button>
+            </div>
+            {% else %}
+            <p>Пока нет комментариев</p>
+            {% endfor %}
+        </div>
+    </div>
+
+    <script>
+        async function addComment(postId) {
+            const authorId = document.getElementById('commentAuthor').value;
+            const content = document.getElementById('commentContent').value;
+            
+            if (!authorId || !content) {
+                alert('Выберите пользователя и введите комментарий!');
+                return;
+            }
+
+            try {
+                const response = await fetch('/api/comments/', {
+                    method: 'POST',
+                    headers: { 'Content-Type': 'application/json' },
+                    body: JSON.stringify({
+                        post_id: parseInt(postId),
+                        user_id: parseInt(authorId),
+                        content: content
+                    })
+                });
+                
+                if (response.ok) {
+                    alert('Комментарий добавлен!');
+                    location.reload();
+                } else {
+                    alert('Ошибка при добавлении комментария');
+                }
+            } catch (error) {
+                alert('Ошибка: ' + error.message);
+            }
+        }
+
+        async function deleteComment(commentId) {
+            if (!confirm('Удалить комментарий?')) return;
+            
+            try {
+                const response = await fetch('/api/comments/' + commentId, {
+                    method: 'DELETE'
+                });
+                
+                if (response.ok) {
+                    alert('Комментарий удален!');
+                    location.reload();
+                }
+            } catch (error) {
+                alert('Ошибка: ' + error.message);
+            }
+        }
+
+        async function addToFavorites(postId) {
+            const userId = document.getElementById('favoriteUser').value;
+            if (!userId) {
+                alert('Выберите пользователя!');
+                return;
+            }
+
+            try {
+                const response = await fetch('/api/favorites/', {
+                    method: 'POST',
+                    headers: { 'Content-Type': 'application/json' },
+                    body: JSON.stringify({
+                        user_id: parseInt(userId),
+                        post_id: parseInt(postId)
+                    })
+                });
+                
+                if (response.ok) {
+                    alert('Добавлено в избранное!');
+                    document.getElementById('favoriteUser').value = '';
+                } else {
+                    alert('Ошибка при добавлении в избранное');
+                }
+            } catch (error) {
+                alert('Ошибка: ' + error.message);
+            }
+        }
+
+        async function subscribeToAuthor(authorId) {
+            const userId = document.getElementById('subscriberUser').value;
+            if (!userId) {
+                alert('Выберите пользователя!');
+                return;
+            }
+
+            try {
+                const response = await fetch('/api/subscriptions/', {
+                    method: 'POST',
+                    headers: { 'Content-Type': 'application/json' },
+                    body: JSON.stringify({
+                        subscriber_id: parseInt(userId),
+                        target_user_id: parseInt(authorId)
+                    })
+                });
+                
+                if (response.ok) {
+                    alert('Подписка оформлена!');
+                    document.getElementById('subscriberUser').value = '';
+                } else {
+                    const error = await response.json();
+                    alert('Ошибка: ' + error.detail);
+                }
+            } catch (error) {
+                alert('Ошибка: ' + error.message);
+            }
+        }
+
+        async function viewSubscriptions(authorId) {
+            try {
+                const response = await fetch('/api/users/' + authorId + '/subscribers');
+                const subscribers = await response.json();
+                
+                let message = 'Подписчики автора:\n';
+                if (subscribers.length > 0) {
+                    subscribers.forEach(sub => {
+                        message += `- ID пользователя: ${sub.subscriber_id}\n`;
+                    });
+                } else {
+                    message += 'Нет подписчиков';
+                }
+                alert(message);
+            } catch (error) {
+                alert('Ошибка: ' + error.message);
+            }
+        }
+    </script>
 </body>
 </html>
