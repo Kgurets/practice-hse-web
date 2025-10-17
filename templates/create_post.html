@@ -8,9 +8,13 @@
         label { display: block; margin-bottom: 5px; font-weight: bold; }
         input, textarea, select { width: 100%; padding: 8px; border: 1px solid #ddd; border-radius: 4px; }
         textarea { height: 150px; }
-        button { background: #ff69b4; color: white; padding: 10px 20px; border: none; border-radius: 4px; cursor: pointer; }
+        button { background: #ff69b4; color: white; padding: 10px 20px; border: none; border-radius: 4px; cursor: pointer; margin: 5px; }
         .btn { padding: 8px 16px; text-decoration: none; border-radius: 5px; }
         .btn-primary { background: #ff69b4; color: white; }
+        .categories-section { margin: 15px 0; padding: 15px; border: 1px solid #ddd; border-radius: 4px; }
+        .category-checkbox { margin: 5px 0; }
+        .new-category { margin-top: 10px; padding: 10px; background: #f9f9f9; border-radius: 4px; }
+        .btn-success { background: #28a745; }
     </style>
 </head>
 <body>
@@ -18,7 +22,7 @@
     <h1>Создать новый пост</h1>
     
     {% if users %}
-    <form action="/posts/create" method="post">
+    <form id="postForm">
         <div class="form-group">
             <label for="author_id">Автор:</label>
             <select id="author_id" name="author_id" required>
@@ -38,17 +42,79 @@
             <label for="content">Содержание:</label>
             <textarea id="content" name="content" required></textarea>
         </div>
+
+        <div class="categories-section">
+            <label><strong>Категории:</strong></label>
+            <div id="categoriesList">
+                {% for category in categories %}
+                <div class="category-checkbox">
+                    <input type="checkbox" id="category_{{ category.id }}" name="categories" value="{{ category.id }}">
+                    <label for="category_{{ category.id }}">{{ category.name }}{% if category.description %} - {{ category.description }}{% endif %}</label>
+                </div>
+                {% else %}
+                <p>Нет категорий</p>
+                {% endfor %}
+            </div>
+        </div>
         
-        <button type="submit">Опубликовать пост</button>
+        <button type="button" onclick="createPostWithCategories()" class="btn-success">Опубликовать пост</button>
     </form>
     {% else %}
     <div style="background: #fff3cd; padding: 10px; border-radius: 4px; margin: 20px 0;">
         <strong>Внимание!</strong> Нет пользователей. 
-        <button type="button" onclick="createTestUser()" style="background: #ff69b4; color: white; border: none; padding: 5px 10px; border-radius: 3px; cursor: pointer;">Создать тестового пользователя</button>
+        <button type="button" onclick="createTestUser()">Создать тестового пользователя</button>
     </div>
     {% endif %}
 
     <script>
+        async function createPostWithCategories() {
+            const authorId = document.getElementById('author_id').value;
+            const title = document.getElementById('title').value;
+            const content = document.getElementById('content').value;
+            const categoryCheckboxes = document.querySelectorAll('input[name="categories"]:checked');
+            
+            if (!authorId || !title || !content) {
+                alert('Заполните все обязательные поля!');
+                return;
+            }
+
+            const selectedCategories = Array.from(categoryCheckboxes).map(cb => parseInt(cb.value));
+
+            try {
+                const postResponse = await fetch('/api/posts/', {
+                    method: 'POST',
+                    headers: { 'Content-Type': 'application/json' },
+                    body: JSON.stringify({
+                        author_id: parseInt(authorId),
+                        title: title,
+                        content: content
+                    })
+                });
+                
+                if (postResponse.ok) {
+                    const post = await postResponse.json();
+                    
+                    for (const categoryId of selectedCategories) {
+                        await fetch('/api/post_categories/', {
+                            method: 'POST',
+                            headers: { 'Content-Type': 'application/json' },
+                            body: JSON.stringify({
+                                post_id: post.id,
+                                category_id: categoryId
+                            })
+                        });
+                    }
+                    
+                    alert('Пост создан!');
+                    window.location.href = '/';
+                } else {
+                    alert('Ошибка при создании поста');
+                }
+            } catch (error) {
+                alert('Ошибка: ' + error.message);
+            }
+        }
+
         async function createTestUser() {
             const response = await fetch('/api/users/', {
                 method: 'POST',
